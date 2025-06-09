@@ -3,6 +3,8 @@ import '../models/product.dart';
 import '../services/product_service.dart';
 import '../services/auth_service.dart';
 import 'auth_screen.dart';
+import 'product_detail_screen.dart';
+import 'create_product_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
@@ -48,6 +50,44 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
+  Future<void> _navigateToCreateProduct() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const CreateProductScreen()),
+    );
+    if (result == true) {
+      _loadProducts();
+    }
+  }
+
+  Future<void> _navigateToProductDetail(Product product) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProductDetailScreen(productId: product.id),
+      ),
+    );
+    
+    // Always refresh the list when returning from detail screen
+    _loadProducts();
+    
+    if (mounted) {
+      if (result == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Product deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (result == false) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete product'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,6 +103,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
             onPressed: _handleLogout,
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToCreateProduct,
+        child: const Icon(Icons.add),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -103,6 +147,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           DataCell(Text(product.createdAt.toString())),
                           DataCell(Text(product.updatedAt.toString())),
                         ],
+                        onSelectChanged: (_) => _navigateToProductDetail(product),
                       );
                     }).toList(),
                   ),
