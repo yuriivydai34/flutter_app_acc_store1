@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'products_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -30,20 +31,27 @@ class _AuthScreenState extends State<AuthScreen> {
             _usernameController.text,
             _passwordController.text,
           );
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const ProductsScreen()),
+            );
+          }
         } else {
           await _authService.register(
             _usernameController.text,
             _passwordController.text,
           );
-        }
-        // Handle successful login/registration
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(_isLogin ? 'Login successful!' : 'Registration successful!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Registration successful! Please login.'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            setState(() {
+              _isLogin = true;
+            });
+          }
         }
       } catch (e) {
         setState(() {
