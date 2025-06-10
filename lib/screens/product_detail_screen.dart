@@ -121,6 +121,87 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  Widget _buildImageGallery() {
+    if (_product == null || _product!.imageUrls.isEmpty) {
+      return const Center(
+        child: Text('No images available'),
+      );
+    }
+
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _product!.imageUrls.length,
+        itemBuilder: (context, index) {
+          final imageUrl = _product!.imageUrls[index];
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GestureDetector(
+              onTap: () {
+                // Show full-screen image
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => Scaffold(
+                      appBar: AppBar(
+                        title: const Text('Product Image'),
+                      ),
+                      body: Center(
+                        child: InteractiveViewer(
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  imageUrl,
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 200,
+                      height: 200,
+                      color: Colors.grey[300],
+                      child: const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 50,
+                      ),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      width: 200,
+                      height: 200,
+                      color: Colors.grey[300],
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,77 +240,86 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ],
                   ),
                 )
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: _formKey,
+              : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TextFormField(
-                          controller: _titleController,
-                          decoration: const InputDecoration(
-                            labelText: 'Title',
-                            border: OutlineInputBorder(),
-                          ),
-                          enabled: _isEditing,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a title';
-                            }
-                            return null;
-                          },
-                        ),
+                        if (!_isEditing) _buildImageGallery(),
                         const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _descriptionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Description',
-                            border: OutlineInputBorder(),
-                          ),
-                          enabled: _isEditing,
-                          maxLines: 3,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a description';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        if (_isEditing)
-                          Row(
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ElevatedButton(
-                                onPressed: _updateProduct,
-                                child: const Text('Save'),
-                              ),
-                              const SizedBox(width: 16),
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _isEditing = false;
-                                    _titleController.text = _product!.title;
-                                    _descriptionController.text = _product!.description;
-                                  });
+                              TextFormField(
+                                controller: _titleController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Title',
+                                  border: OutlineInputBorder(),
+                                ),
+                                enabled: _isEditing,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a title';
+                                  }
+                                  return null;
                                 },
-                                child: const Text('Cancel'),
                               ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _descriptionController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Description',
+                                  border: OutlineInputBorder(),
+                                ),
+                                enabled: _isEditing,
+                                maxLines: 3,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a description';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              if (_isEditing)
+                                Row(
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: _updateProduct,
+                                      child: const Text('Save'),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    TextButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _isEditing = false;
+                                          _titleController.text = _product!.title;
+                                          _descriptionController.text = _product!.description;
+                                        });
+                                      },
+                                      child: const Text('Cancel'),
+                                    ),
+                                  ],
+                                ),
+                              if (!_isEditing) ...[
+                                const Text(
+                                  'Created At:',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(_product!.createdAt.toString()),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Updated At:',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(_product!.updatedAt.toString()),
+                              ],
                             ],
                           ),
-                        if (!_isEditing) ...[
-                          const Text(
-                            'Created At:',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(_product!.createdAt.toString()),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Updated At:',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(_product!.updatedAt.toString()),
-                        ],
+                        ),
                       ],
                     ),
                   ),
