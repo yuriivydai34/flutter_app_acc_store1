@@ -11,15 +11,59 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_app_acc_store1/main.dart';
 
 void main() {
-  testWidgets('App initializes and shows store front', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    
-    await tester.pumpWidget(MyApp(prefs: prefs));
-    await tester.pumpAndSettle();
+  group('App Initialization', () {
+    testWidgets('App initializes and shows store front', (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      
+      await tester.pumpWidget(MyApp(prefs: prefs));
+      await tester.pumpAndSettle();
 
-    // Verify that we're on the store front screen
-    expect(find.text('Store'), findsOneWidget);
-    expect(find.text('Welcome to the Store!'), findsOneWidget);
+      // Verify that we're on the store front screen
+      expect(find.text('Store'), findsOneWidget);
+      expect(find.text('Welcome to the Store!'), findsOneWidget);
+    });
+  });
+
+  group('Navigation Tests', () {
+    testWidgets('Profile button navigates to profile screen', (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      
+      await tester.pumpWidget(MyApp(prefs: prefs));
+      await tester.pumpAndSettle();
+
+      // Find and tap the profile button
+      await tester.tap(find.byIcon(Icons.person));
+      await tester.pumpAndSettle();
+
+      // Verify we're on the profile screen
+      expect(find.text('Profile'), findsOneWidget);
+    });
+
+    testWidgets('Logout button exists on store front', (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      
+      await tester.pumpWidget(MyApp(prefs: prefs));
+      await tester.pumpAndSettle();
+
+      // Verify logout button exists
+      expect(find.byIcon(Icons.logout), findsOneWidget);
+    });
+  });
+
+  group('Theme Tests', () {
+    testWidgets('App uses Material 3 theme', (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      
+      await tester.pumpWidget(MyApp(prefs: prefs));
+      await tester.pumpAndSettle();
+
+      // Verify Material 3 theme is applied
+      final MaterialApp app = tester.widget(find.byType(MaterialApp));
+      expect(app.theme?.useMaterial3, isTrue);
+    });
   });
 }
