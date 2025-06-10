@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/product.dart';
 import 'auth_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ProductService {
-  static const String baseUrl = 'http://localhost:3000';
   final AuthService _authService = AuthService();
 
   Future<String?> _getAuthHeader() async {
@@ -19,7 +19,7 @@ class ProductService {
     try {
       final authHeader = await _getAuthHeader();
       final response = await http.get(
-        Uri.parse('$baseUrl/product'),
+        Uri.parse('${dotenv.env['API_URL']}/product'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': authHeader!,
@@ -43,7 +43,7 @@ class ProductService {
     try {
       final authHeader = await _getAuthHeader();
       final response = await http.get(
-        Uri.parse('$baseUrl/product/$id'),
+        Uri.parse('${dotenv.env['API_URL']}/product/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': authHeader!,
@@ -68,7 +68,7 @@ class ProductService {
     try {
       final authHeader = await _getAuthHeader();
       final response = await http.post(
-        Uri.parse('$baseUrl/product'),
+        Uri.parse('${dotenv.env['API_URL']}/product'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': authHeader!,
@@ -95,7 +95,7 @@ class ProductService {
     try {
       final authHeader = await _getAuthHeader();
       final response = await http.patch(
-        Uri.parse('$baseUrl/product/$id'),
+        Uri.parse('${dotenv.env['API_URL']}/product/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': authHeader!,
@@ -125,7 +125,7 @@ class ProductService {
     try {
       final authHeader = await _getAuthHeader();
       final response = await http.delete(
-        Uri.parse('$baseUrl/product/$id'),
+        Uri.parse('${dotenv.env['API_URL']}/product/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': authHeader!,

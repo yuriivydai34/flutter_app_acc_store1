@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://localhost:3000';
   static const String _tokenKey = 'auth_token';
 
   Future<Map<String, dynamic>> register(String username, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users'),
+        Uri.parse('${dotenv.env['API_URL']}/users'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'username': username,
@@ -30,7 +30,7 @@ class AuthService {
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/auth/login'),
+        Uri.parse('${dotenv.env['API_URL']}/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'username': username,

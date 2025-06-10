@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class Product {
   final int id;
   final String title;
@@ -22,12 +24,9 @@ class Product {
       urls = (json['files'] as List)
           .map((file) {
             final url = file['url'] as String;
-            final encodedUrl = Uri.encodeComponent(url);
-            return 'http://localhost:3000/$encodedUrl';
+            return '${dotenv.env['API_URL']}${url}';
           })
           .toList();
-
-      print(urls);
     }
     
     return Product(
