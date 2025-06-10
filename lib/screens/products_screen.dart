@@ -5,9 +5,12 @@ import '../services/auth_service.dart';
 import 'auth_screen.dart';
 import 'product_detail_screen.dart';
 import 'create_product_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductsScreen extends StatefulWidget {
-  const ProductsScreen({super.key});
+  final SharedPreferences prefs;
+
+  const ProductsScreen({super.key, required this.prefs});
 
   @override
   State<ProductsScreen> createState() => _ProductsScreenState();
@@ -45,7 +48,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     await _authService.logout();
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const AuthScreen()),
+        MaterialPageRoute(builder: (context) => AuthScreen(prefs: widget.prefs)),
       );
     }
   }

@@ -81,7 +81,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     await _authService.logout();
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const AuthScreen()),
+        MaterialPageRoute(builder: (context) => AuthScreen(prefs: widget.prefs)),
       );
     }
   }

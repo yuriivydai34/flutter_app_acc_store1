@@ -1,5 +1,5 @@
 class UserProfile {
-  final String sub;
+  final int sub;
   final String username;
   final bool isAdmin;
   final int iat;
@@ -15,7 +15,7 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
-      sub: json['sub'],
+      sub: json['sub'] is String ? int.parse(json['sub']) : json['sub'],
       username: json['username'],
       isAdmin: json['isAdmin'] ?? false,
       iat: json['iat'],
