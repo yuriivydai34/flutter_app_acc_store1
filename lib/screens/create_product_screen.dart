@@ -2,19 +2,30 @@ import 'package:flutter/material.dart';
 import '../services/product_service.dart';
 
 class CreateProductScreen extends StatefulWidget {
-  const CreateProductScreen({super.key});
+  final ProductService? productService;
+
+  const CreateProductScreen({
+    super.key,
+    this.productService,
+  });
 
   @override
   State<CreateProductScreen> createState() => _CreateProductScreenState();
 }
 
 class _CreateProductScreenState extends State<CreateProductScreen> {
-  final ProductService _productService = ProductService();
+  late final ProductService _productService;
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _productService = widget.productService ?? ProductService();
+  }
 
   Future<void> _createProduct() async {
     if (_formKey.currentState!.validate()) {

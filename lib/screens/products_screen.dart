@@ -9,16 +9,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductsScreen extends StatefulWidget {
   final SharedPreferences prefs;
+  final ProductService? productService;
+  final AuthService? authService;
 
-  const ProductsScreen({super.key, required this.prefs});
+  const ProductsScreen({
+    super.key, 
+    required this.prefs,
+    this.productService,
+    this.authService,
+  });
 
   @override
   State<ProductsScreen> createState() => _ProductsScreenState();
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
-  final ProductService _productService = ProductService();
-  final AuthService _authService = AuthService();
+  late final ProductService _productService;
+  late final AuthService _authService;
   List<Product> _products = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -26,6 +33,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
   @override
   void initState() {
     super.initState();
+    _productService = widget.productService ?? ProductService();
+    _authService = widget.authService ?? AuthService();
     _loadProducts();
   }
 

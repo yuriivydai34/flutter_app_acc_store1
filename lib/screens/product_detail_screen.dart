@@ -12,11 +12,15 @@ import 'dart:convert';
 class ProductDetailScreen extends StatefulWidget {
   final int productId;
   final SharedPreferences prefs;
+  final ProductService? productService;
+  final AuthService? authService;
 
   const ProductDetailScreen({
     super.key,
     required this.productId,
     required this.prefs,
+    this.productService,
+    this.authService,
   });
 
   @override
@@ -24,8 +28,8 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  final ProductService _productService = ProductService();
-  final AuthService _authService = AuthService();
+  late final ProductService _productService;
+  late final AuthService _authService;
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -40,6 +44,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _productService = widget.productService ?? ProductService();
+    _authService = widget.authService ?? AuthService();
     _loadProduct();
   }
 
