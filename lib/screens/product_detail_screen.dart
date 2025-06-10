@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product.dart';
+import '../services/auth_service.dart';
 import '../services/product_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final int productId;
+  final SharedPreferences prefs;
 
   const ProductDetailScreen({
     super.key,
     required this.productId,
+    required this.prefs,
   });
 
   @override
@@ -16,13 +24,17 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final ProductService _productService = ProductService();
+  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _imagePicker = ImagePicker();
   bool _isLoading = true;
   bool _isEditing = false;
+  bool _isUploading = false;
   String? _errorMessage;
   Product? _product;
+  List<String> _imageUrls = [];
 
   @override
   void initState() {
@@ -37,12 +49,58 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         _product = product;
         _titleController.text = product.title;
         _descriptionController.text = product.description;
+        _imageUrls = product.imageUrls;
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+
+      setState(() {
+        _isUploading = true;
+        _errorMessage = null;
+      });
+
+      final token = await _authService.getToken();
+      if (token == null) {
+        throw Exception('Not authenticated');
+      }
+
+      final url = '${dotenv.env['API_URL']}/files/upload/${widget.productId}';
+      print('Uploading to: $url'); // Debug log
+
+      final request = http.MultipartRequest('POST', Uri.parse(url));
+      request.headers['Authorization'] = 'Bearer $token';
+      request.files.add(await http.MultipartFile.fromPath('file', image.path));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      print('Response status: ${response.statusCode}'); // Debug log
+      print('Response body: ${response.body}'); // Debug log
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await _loadProduct(); // Reload product to get updated image URLs
+      } else {
+        throw Exception('Failed to upload image: ${response.body}');
+      }
+    } catch (e) {
+      print('Upload error: $e'); // Debug log
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    } finally {
+      setState(() {
+        _isUploading = false;
       });
     }
   }
@@ -206,12 +264,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Product' : 'Product Details'),
+        title: const Text('Product Details'),
         actions: [
           if (!_isEditing)
             IconButton(
               icon: const Icon(Icons.edit),
-              onPressed: () => setState(() => _isEditing = true),
+              onPressed: () {
+                setState(() {
+                  _isEditing = true;
+                });
+              },
             ),
           if (!_isEditing)
             IconButton(
@@ -241,87 +303,108 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 )
               : SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (!_isEditing) _buildImageGallery(),
-                        const SizedBox(height: 16),
-                        Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextFormField(
-                                controller: _titleController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Title',
-                                  border: OutlineInputBorder(),
-                                ),
-                                enabled: _isEditing,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter a title';
-                                  }
-                                  return null;
-                                },
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextFormField(
+                              controller: _titleController,
+                              decoration: const InputDecoration(
+                                labelText: 'Title',
+                                border: OutlineInputBorder(),
                               ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _descriptionController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Description',
-                                  border: OutlineInputBorder(),
-                                ),
-                                enabled: _isEditing,
-                                maxLines: 3,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter a description';
-                                  }
-                                  return null;
-                                },
+                              enabled: _isEditing,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a title';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _descriptionController,
+                              decoration: const InputDecoration(
+                                labelText: 'Description',
+                                border: OutlineInputBorder(),
                               ),
-                              const SizedBox(height: 16),
-                              if (_isEditing)
-                                Row(
-                                  children: [
-                                    ElevatedButton(
-                                      onPressed: _updateProduct,
-                                      child: const Text('Save'),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    TextButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          _isEditing = false;
-                                          _titleController.text = _product!.title;
-                                          _descriptionController.text = _product!.description;
-                                        });
-                                      },
-                                      child: const Text('Cancel'),
-                                    ),
-                                  ],
-                                ),
-                              if (!_isEditing) ...[
-                                const Text(
-                                  'Created At:',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(_product!.createdAt.toString()),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Updated At:',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(_product!.updatedAt.toString()),
-                              ],
+                              maxLines: 3,
+                              enabled: _isEditing,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a description';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            if (_isEditing) ...[
+                              ElevatedButton(
+                                onPressed: _isLoading ? null : _updateProduct,
+                                child: _isLoading
+                                    ? const CircularProgressIndicator()
+                                    : const Text('Save Changes'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _isEditing = false;
+                                    _titleController.text = _product!.title;
+                                    _descriptionController.text = _product!.description;
+                                  });
+                                },
+                                child: const Text('Cancel'),
+                              ),
                             ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Product Images',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (_imageUrls.isNotEmpty)
+                        SizedBox(
+                          height: 200,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _imageUrls.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: Image.network(
+                                  _imageUrls[index],
+                                  height: 200,
+                                  width: 200,
+                                  fit: BoxFit.cover,
+                                ),
+                              );
+                            },
                           ),
                         ),
-                      ],
-                    ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: _isUploading ? null : _pickAndUploadImage,
+                        icon: _isUploading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.upload),
+                        label: Text(_isUploading ? 'Uploading...' : 'Upload Image'),
+                      ),
+                    ],
                   ),
                 ),
     );

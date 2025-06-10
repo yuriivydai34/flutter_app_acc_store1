@@ -65,7 +65,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Future<void> _navigateToProductDetail(Product product) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ProductDetailScreen(productId: product.id),
+        builder: (context) => ProductDetailScreen(
+          productId: product.id,
+          prefs: widget.prefs,
+        ),
       ),
     );
     
