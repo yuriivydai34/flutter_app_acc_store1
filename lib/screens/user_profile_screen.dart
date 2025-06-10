@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'store_front_screen.dart';
+import 'products_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final SharedPreferences prefs;
@@ -93,6 +94,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
+          if (_profile?.isAdmin == true)
+            IconButton(
+              icon: const Icon(Icons.inventory),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => ProductsScreen(prefs: widget.prefs)),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.home),
             onPressed: () {
