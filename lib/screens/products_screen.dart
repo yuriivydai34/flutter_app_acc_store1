@@ -146,6 +146,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
               : SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
+                    showCheckboxColumn: false,
                     columns: const [
                       DataColumn(label: Text('ID')),
                       DataColumn(label: Text('Title')),
