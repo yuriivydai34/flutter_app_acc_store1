@@ -7,6 +7,7 @@ import '../models/product.dart';
 import '../services/auth_service.dart';
 import '../services/product_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:convert';
 
 class ProductDetailScreen extends StatefulWidget {
   final int productId;
@@ -179,6 +180,42 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  Future<void> _deleteImage(String imageUrl, dynamic fileId) async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final token = await _authService.getToken();
+      if (token == null) {
+        throw Exception('Not authenticated');
+      }
+
+      final url = '${dotenv.env['API_URL']}/files/${fileId.toString()}';
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        await _loadProduct(); // Reload product to update image list
+      } else {
+        throw Exception('Failed to delete image: ${response.body}');
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Widget _buildImageGallery() {
     if (_product == null || _product!.imageUrls.isEmpty) {
       return const Center(
@@ -192,68 +229,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         scrollDirection: Axis.horizontal,
         itemCount: _product!.imageUrls.length,
         itemBuilder: (context, index) {
-          final imageUrl = _product!.imageUrls[index];
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GestureDetector(
-              onTap: () {
-                // Show full-screen image
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => Scaffold(
-                      appBar: AppBar(
-                        title: const Text('Product Image'),
-                      ),
-                      body: Center(
-                        child: InteractiveViewer(
-                          child: Image.network(
-                            imageUrl,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+          final fileId = _product!.files[index]['id'];
+          return Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
                 child: Image.network(
-                  imageUrl,
-                  width: 200,
+                  _product!.imageUrls[index],
                   height: 200,
+                  width: 200,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 200,
-                      height: 200,
-                      color: Colors.grey[300],
-                      child: const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
-                        size: 50,
-                      ),
-                    );
-                  },
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      width: 200,
-                      height: 200,
-                      color: Colors.grey[300],
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
-                              : null,
-                        ),
-                      ),
-                    );
-                  },
                 ),
               ),
-            ),
+              Positioned(
+                top: 8,
+                right: 16,
+                child: IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _deleteImage(_product!.imageUrls[index], fileId),
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -380,14 +376,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             scrollDirection: Axis.horizontal,
                             itemCount: _imageUrls.length,
                             itemBuilder: (context, index) {
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: Image.network(
-                                  _imageUrls[index],
-                                  height: 200,
-                                  width: 200,
-                                  fit: BoxFit.cover,
-                                ),
+                              final fileId = _product!.files[index]['id'];
+                              return Stack(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: Image.network(
+                                      _imageUrls[index],
+                                      height: 200,
+                                      width: 200,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 8,
+                                    right: 16,
+                                    child: IconButton(
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _deleteImage(_imageUrls[index], fileId),
+                                    ),
+                                  ),
+                                ],
                               );
                             },
                           ),

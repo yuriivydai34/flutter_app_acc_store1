@@ -7,6 +7,7 @@ class Product {
   final DateTime createdAt;
   final DateTime updatedAt;
   final List<String> imageUrls;
+  final List<Map<String, dynamic>> files;
 
   Product({
     required this.id,
@@ -14,21 +15,21 @@ class Product {
     required this.description,
     required this.createdAt,
     required this.updatedAt,
-    this.imageUrls = const [],
+    required this.imageUrls,
+    required this.files,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
     List<String> urls = [];
-    if (json['files'] != null && 
-        json['files'] is List) {
+    if (json['files'] != null && json['files'] is List) {
       urls = (json['files'] as List)
           .map((file) {
             final url = file['url'] as String;
-            return '${dotenv.env['API_URL']}${url}';
+            return '${dotenv.env['API_URL']}$url';
           })
           .toList();
     }
-    
+
     return Product(
       id: json['id'],
       title: json['title'],
@@ -36,6 +37,7 @@ class Product {
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
       imageUrls: urls,
+      files: List<Map<String, dynamic>>.from(json['files'] ?? []),
     );
   }
 } 
