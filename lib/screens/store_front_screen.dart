@@ -3,6 +3,7 @@ import '../models/product.dart';
 import '../services/product_service.dart';
 import 'auth_screen.dart';
 import 'product_details_screen.dart';
+import 'cart_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StoreFrontScreen extends StatefulWidget {
@@ -61,6 +62,15 @@ class _StoreFrontScreenState extends State<StoreFrontScreen> {
       appBar: AppBar(
         title: const Text('Store Front'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CartScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _logout,

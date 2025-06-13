@@ -45,4 +45,48 @@ class OrderService {
       throw Exception('Failed to create order: ${response.body}');
     }
   }
+
+  Future<List<Order>> getOrders() async {
+    final token = await _authService.getToken();
+    if (token == null) {
+      throw Exception('Not authenticated');
+    }
+
+    final response = await http.get(
+      Uri.parse('${dotenv.env['API_URL']}/order'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      try {
+        final List<dynamic> jsonResponse = jsonDecode(response.body);
+        return jsonResponse.map((json) => Order.fromJson(json)).toList();
+      } catch (e) {
+        print('Error parsing response: $e');
+        throw Exception('Failed to parse server response: $e');
+      }
+    } else {
+      throw Exception('Failed to get orders: ${response.body}');
+    }
+  }
+
+  Future<void> deleteOrder(int orderId) async {
+    final token = await _authService.getToken();
+    if (token == null) {
+      throw Exception('Not authenticated');
+    }
+
+    final response = await http.delete(
+      Uri.parse('${dotenv.env['API_URL']}/order/$orderId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete order: ${response.body}');
+    }
+  }
 } 
