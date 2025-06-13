@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
 import 'auth_screen.dart';
+import 'product_details_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StoreFrontScreen extends StatefulWidget {
@@ -143,6 +144,21 @@ class _StoreFrontScreenState extends State<StoreFrontScreen> {
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.green,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ProductDetailsScreen(product: product),
+                                            ),
+                                          );
+                                        },
+                                        child: const Text('Details'),
                                       ),
                                     ),
                                   ],
