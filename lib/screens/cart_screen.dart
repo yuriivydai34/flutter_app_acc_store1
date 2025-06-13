@@ -116,7 +116,19 @@ class _CartScreenState extends State<CartScreen> {
                                             child: const Icon(Icons.image_not_supported),
                                           ),
                                     title: Text(product?.title ?? 'Loading...'),
-                                    subtitle: Text('\$${order.price.toStringAsFixed(2)}'),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        if (product?.price != order.price)
+                                          Text(
+                                            'Original price: \$${product?.price.toStringAsFixed(2) ?? '0.00'}',
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                     trailing: IconButton(
                                       icon: const Icon(Icons.delete),
                                       onPressed: () async {
