@@ -7,14 +7,15 @@ import 'auth_service.dart';
 class OrderService {
   final AuthService _authService = AuthService();
 
-  Future<Order> createOrder(int productId) async {
+  Future<Order> createOrder(int productId, double price) async {
     final token = await _authService.getToken();
     if (token == null) {
       throw Exception('Not authenticated');
     }
 
     final requestBody = {
-      'productId': productId
+      'productId': productId,
+      'price': price,
     };
     print('Sending request body: ${jsonEncode(requestBody)}');
 

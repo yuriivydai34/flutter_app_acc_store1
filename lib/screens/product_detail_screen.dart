@@ -33,6 +33,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _priceController = TextEditingController();
   final _imagePicker = ImagePicker();
   bool _isLoading = true;
   bool _isEditing = false;
@@ -56,6 +57,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         _product = product;
         _titleController.text = product.title;
         _descriptionController.text = product.description;
+        _priceController.text = product.price.toString();
         _imageUrls = product.imageUrls;
         _isLoading = false;
       });
@@ -120,10 +122,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       });
 
       try {
+        final price = double.tryParse(_priceController.text) ?? 0.0;
         final updatedProduct = await _productService.updateProduct(
           widget.productId,
           _titleController.text,
           _descriptionController.text,
+          price,
         );
         setState(() {
           _product = updatedProduct;
@@ -345,6 +349,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               },
                             ),
                             const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _priceController,
+                              decoration: const InputDecoration(
+                                labelText: 'Price',
+                                border: OutlineInputBorder(),
+                                prefixText: '\$',
+                              ),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              enabled: _isEditing,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a price';
+                                }
+                                if (double.tryParse(value) == null) {
+                                  return 'Please enter a valid price';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
                             if (_isEditing) ...[
                               ElevatedButton(
                                 onPressed: _isLoading ? null : _updateProduct,
@@ -358,6 +382,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     _isEditing = false;
                                     _titleController.text = _product!.title;
                                     _descriptionController.text = _product!.description;
+                                    _priceController.text = _product!.price.toString();
                                   });
                                 },
                                 child: const Text('Cancel'),
@@ -429,6 +454,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _priceController.dispose();
     super.dispose();
   }
 } 

@@ -35,7 +35,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
     try {
       final order = await _orderService.createOrder(
-        widget.product.id
+        widget.product.id,
+        widget.product.price,
       );
 
       if (mounted) {

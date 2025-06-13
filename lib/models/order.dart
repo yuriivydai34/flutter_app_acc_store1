@@ -5,12 +5,14 @@ class Order {
   final int productId;
   final String? cashReceiptId;
   final Product? product;
+  final double price;
 
   Order({
     required this.id,
     required this.productId,
     this.cashReceiptId,
     this.product,
+    required this.price,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,7 @@ class Order {
       productId: json['product']?['id'] as int? ?? 0,
       cashReceiptId: json['cash_receipt_id'] as String?,
       product: json['product'] != null ? Product.fromJson(json['product']) : null,
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -27,6 +30,7 @@ class Order {
       'id': id,
       'product_id': productId,
       'cash_receipt_id': cashReceiptId,
+      'price': price,
     };
   }
 } 

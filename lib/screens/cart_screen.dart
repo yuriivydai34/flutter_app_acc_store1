@@ -116,7 +116,7 @@ class _CartScreenState extends State<CartScreen> {
                                             child: const Icon(Icons.image_not_supported),
                                           ),
                                     title: Text(product?.title ?? 'Loading...'),
-                                    subtitle: Text('\$${product?.price.toStringAsFixed(2) ?? '0.00'}'),
+                                    subtitle: Text('\$${order.price.toStringAsFixed(2)}'),
                                     trailing: IconButton(
                                       icon: const Icon(Icons.delete),
                                       onPressed: () async {

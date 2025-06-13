@@ -64,7 +64,7 @@ class ProductService {
     }
   }
 
-  Future<Product> createProduct(String title, String description) async {
+  Future<Product> createProduct(String title, String description, double price) async {
     try {
       final authHeader = await _getAuthHeader();
       final response = await http.post(
@@ -76,6 +76,7 @@ class ProductService {
         body: jsonEncode({
           'title': title,
           'description': description,
+          'price': price,
         }),
       );
 
@@ -91,7 +92,7 @@ class ProductService {
     }
   }
 
-  Future<Product> updateProduct(int id, String title, String description) async {
+  Future<Product> updateProduct(int id, String title, String description, double price) async {
     try {
       final authHeader = await _getAuthHeader();
       final response = await http.patch(
@@ -103,6 +104,7 @@ class ProductService {
         body: jsonEncode({
           'title': title,
           'description': description,
+          'price': price,
         }),
       );
 
