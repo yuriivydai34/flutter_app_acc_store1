@@ -89,4 +89,28 @@ class OrderService {
       throw Exception('Failed to delete order: ${response.body}');
     }
   }
+
+  Future<Map<String, dynamic>> createCashReceipt(List<int> orderIds) async {
+    final token = await _authService.getToken();
+    if (token == null) {
+      throw Exception('Not authenticated');
+    }
+
+    final response = await http.post(
+      Uri.parse('${dotenv.env['API_URL']}/cash-receipt'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'orders': orderIds,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to create cash receipt: ${response.body}');
+    }
+  }
 } 
